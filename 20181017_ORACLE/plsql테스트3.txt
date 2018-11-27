@@ -1,0 +1,150 @@
+- 1 ~ 10 까지의 정수 총합 구하기
+출력 1+2+3+4+5
+1까지총합=1
+2까지총합=3
+3        = 6
+....
+10       = 55
+
+
+create or replace procedure sum_int
+(v_min number, v_max number)
+
+is
+v_su number := v_min-1;
+v_sum number := 0;
+
+begin
+ loop
+  v_su := v_su +1;
+  v_sum := v_sum + v_su;
+  dbms_output.put_line(v_su||' 까지총합 = '||v_sum);
+  exit when v_su = v_max;
+ end loop;
+end;
+/
+show error;
+exec sum_int(1,5);
+
+---------------------------------------
+for v_su in v_min..v_max
+ loop
+  v_sum := v_sum + v_su;
+  dbms_output.put_line(v_su||' 까지총합 = '||v_sum);
+ end loop;
+---------------------------------------
+while v_su < v_max
+ loop
+  v_su := v_su +1;
+  v_sum := v_sum + v_su;
+  dbms_output.put_line(v_su||' 까지총합 = '||v_sum);
+ end loop;
+---------------------------------------
+
+
+=======================================================
+- 5! (FACTORIAL)  구하기: 입력변수 1개
+FACT_PROC(5)--> 5!  구하자
+1!=?
+2!=?
+...
+5!=?
+
+FACT_PROC(-5)-->  -5 : 팩토리얼 구할 수 없습니다
+FACT_PROC(0)--> 0 : 팩토리얼 구할 수 없습니다
+
+ 5*4*3*2*1 = 1*2*3*4*5
+
+
+create or replace procedure factorial_proc
+(v_data in number)
+
+is
+v_fact number := 1;
+v_su number;
+
+begin
+ if ( v_data >0) then 
+
+  for v_su in 2..v_data
+  loop
+  v_fact := v_fact * v_su;
+  dbms_output.put_line(v_su ||'! = '||v_fact);
+  end loop;  
+
+ else dbms_output.put_line(v_data||' : 팩토리얼 구할 수 없습니다');
+ end if;
+end;
+/
+show error
+
+exec factorial_proc(5);
+
+
+
+
+
+======================================================
+- 구구단 2단 출력하기
+2*1=2
+2*2=4
+....
+2*9=18
+
+
+create or replace procedure gugu(dan in number)
+is
+ v_num number;
+
+begin
+ if(dan >= 2 and dan<=9) then
+ 
+  for v_num in 1..9
+  loop
+  dbms_output.put_line(dan||' * '|| v_num ||' = '|| dan*v_num);
+  end loop;
+
+ end if;
+end;
+/
+show error
+
+exec gugu(5);
+
+===========================
+
+연산자 우선순위 priority
+
+- 2- 9단 출력
+
+
+create or replace procedure gugu2_9
+is
+ v_num number;
+ v_dan number;
+begin
+ 
+  for v_dan in 2..9
+  loop
+   for v_num in 1..9
+   loop
+   dbms_output.put_line(v_dan||' * '|| v_num ||' = '|| v_dan*v_num);
+   end loop;
+  end loop;
+
+end;
+/
+show error
+
+exec gugu2_9;
+
+
+
+
+
+
+
+
+
+
+

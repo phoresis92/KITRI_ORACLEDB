@@ -1,0 +1,132 @@
+- Seattle 에 위치한 부서명을 조회하여 출력하는  pl/sql 블록을
+정의하여 실행하라
+단, 도시명은 유동적이며, 입력받아 정의하는 것으로 간주한다.
+
+locations 테이블 : 도시정보
+departments 테이블 : 부서정보
+
+pl/sql블록이름 : in_city_dept ('seattle')
+
+Seattle의 부서들
+....
+....
+....
+....
+
+
+create or replace procedure in_city_dept
+(ci in locations.city%type)
+is
+dept_name departments.department_name%type;
+
+cursor dn_find
+is
+select department_name
+from departments
+where location_id =
+(select location_id
+from locations
+where city = ci);
+
+-- select department_name
+-- from departments d, locations l
+-- where d.location_id = l.location_id
+-- and l.city = 'Seattle';
+
+begin
+dbms_output.put_line(ci||'의 부서들'); 
+open dn_find;
+loop
+ fetch dn_find into dept_name;
+ exit when dn_find%notfound;
+ dbms_output.put_line(dept_name);
+end loop;
+close dn_find;
+end;
+/
+show error
+
+exec in_city_dept('Seattle');
+
+
+
+
+
+-------------------------------------------------
+
+select department_name
+from departments
+where location_id =시애틀의 도시코드
+
+select location_id
+from departments; --27 rows selected
+
+1.
+select department_name
+from departments
+where location_id =
+(select location_id
+from locations
+where lower(city) = 'seattle');
+
+2.
+select department_name
+from departments d, locations l
+where d.location_id = l.location_id
+and lower(l.city) = 'seattle';
+
+3-1
+select location_id
+into v_loc_id
+from locations
+where lower(city) = v_city;
+
+3-2
+select department_name
+from departments
+where location_id = v_loc_id;
+--------------------------------------------------
+
+create or replace procedure in_city_dept
+(v_city in locations.city%type)
+
+is
+v_loc_id locations.location_id%type;
+v_deptname departments.department_name%type;
+
+cursor dept_name_cursor
+is
+select department_name
+from departments
+where location_id = 
+(select location_id
+from locations
+where lower(city) = lower(v_city));
+
+begin
+dbms_output.put_line(v_city||'도시의 부서들');
+
+open dept_name_cursor;
+loop
+
+fetch dept_name_cursor into v_deptname;
+exit when dept_name_cursor%notfound;
+dbms_output.put_line(v_deptname);
+
+end loop;
+close dept_name_cursor;
+
+end;
+/
+show error
+
+exec in_city_dept('seattle');
+
+
+
+
+
+
+
+
+

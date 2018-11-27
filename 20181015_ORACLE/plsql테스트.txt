@@ -1,0 +1,70 @@
+- function 생성(emp_date_func)
+employees 테이블에서 매개변수로 입력 사번 사원의 입사월 조회하여 
+리턴 
+variable hire_date varchar2;
+execute :hire_date  := emp_date_func(20000);
+print hire_date;
+
+CREATE OR REPLACE FUNCTION  EMP_DATE_FUNC
+(ID IN NUMBER)
+RETURN VARCHAR2
+IS
+ RESULT VARCHAR2(10);
+
+BEGIN
+ SELECT to_char(HIRE_DATE, 'mm')
+ INTO RESULT
+ FROM EMPLOYEES
+ WHERE EMPLOYEE_ID = ID;
+dbms_output.put_line(v_id);
+ RETURN(RESULT);
+END;
+/
+
+
+- procedure 생성(emp_insert_proc)
+employees 테이블에 
+사번 1000
+성 홍
+이름 길동
+이메일 gil@kitri.com
+직종 it직종(job_id : 'IT_PROG'
+입사일 18/10/16
+
+데이터 입력
+단 사번, 성, 이름, 이메일은 실행시마다 변경될 수 있으므로 파라미터로 전달받는 것으로 생성
+실행 완료시 '1000 번 사번 등록 완료' 출력
+
+create or replace procedure emp_insert_proc
+(id in employees.employee_id%type,
+last_name employees.last_name%type,
+first_name employees.first_name%type,
+email employees.email%type,
+job_id employees.job_id%type,
+indate employees.hire_date%type)
+is
+begin
+ insert into employees values
+(id, first_name,last_name, email, null, indate,
+job_id, null, null, null, null);
+commit;
+DBMS_OUTPUT.PUT_LINE(ID || '번 사번 등록 완료');
+end;
+/
+
+
+execute emp_insert_proc(1000, '홍', '길동', 'gil@kitri.com','IT_PROG' , SYSDATE);
+execute emp_insert_proc(2000, '홍', '길동', 'gil2@kitri.com','IT_PROG' , SYSDATE);
+execute emp_insert_proc(3000, '홍', '길동', 'gil3@kitri.com','IT_PROG' , SYSDATE);
+
+
+변수명 타입
+타입 : NUMBER, VARCHAR2, DATE
+       테이블명.컬럼명%TYPE(컬럼타입 참조)
+       변수명%TYPE(변수타입 참조)
+
+V_N1 NUMBER;
+V_N2 V_N1%TYPE;
+
+
+V_N2:= V_N1 + V_N1;

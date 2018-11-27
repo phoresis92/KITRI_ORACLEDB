@@ -1,0 +1,159 @@
+- 커미션 받는 사원이 있다면 
+연봉 : 급여*12 + 급여*12*커미션
+ 커미션 받지 못하는 사원이 있다면
+연봉 : 급여*12
+함수/프로시져 선택적 : emp_year_sal 이름
+emp_year_sal(사번):출력결과 급여 , 커미션, 연봉 
+
+
+create or replace procedure emp_year_sal(id in number)
+ is
+   year_sal employees.salary%type;
+   sal employees.salary%type;
+   comm employees.commission_pct%type;
+begin
+   select salary, commission_pct
+   into sal, comm
+   from employees
+   where employee_id=id;
+if(comm is null) 
+then year_sal := sal*12;
+else year_sal := sal*12 + (sal*12)*comm;
+end if;
+dbms_output.put_line(sal || ':' || nvl(comm, 0) || ':' || year_sal);
+end;
+/
+show errors;
+
+exec emp_year_sal(150);
+
+
+- employees 테이블에서 특정 사원의 사번 입력시
+부서번호를 조회하여 다음과 같은 조건으로 부서명을 만들어
+(departments  테이블 없다고 가정하고)
+
+부서번호      부서명 
+10~50         인사부소속
+60, 80, 100   교육부소속 
+나머지        영업부소속
+
+다음의 형식으로 출력하라
+
+사번  부서번호  부서명
+100     800      교육부소속 
+
+create or replace procedure emp_dept_info
+(id in number)
+is
+ dept_id employees.department_id%type;
+ dept_name varchar2(100);
+begin
+ select department_id
+ into dept_id
+ from employees
+ where employee_id = id;
+
+ case when dept_id>=10 and dept_id <=50
+      then dept_name := '인사부소속';
+      when dept_id = 60 or dept_id = 80 or dept_id=100
+      then dept_name := '교육부소속';
+      else dept_name := '영업부소속';
+ end case;
+
+dbms_output.put_line('사번' || ' ' || '부서코드' || '  ' || '부서명');
+ dbms_output.put_line(id || '    ' || dept_id || '   ' || dept_name);
+end;
+/
+show errors;
+
+
+사번 , 성, 이메일, 입사일, 직종코드를 입력받아서
+해당 직종코드가 jobs 테이블에 존재하고 
+해당 사번이 employees  테이블에 존재하면 
+해당 사번의 성, 이메일, 입사일, 직종코드를 변경하고
+해당 사번이 employees  테이블에 존재하지 않으면
+새로운 사원으로 저장.
+이 때 해당 직종코드가 jobs 테이블에 존재하지 않으면 
+jobs 테이블에 입력받은직종코드 : 'NEW_JOB' : 0 : 0 입력
+하는 pl/sql 블록 정의
+
+999 홍 HONG@KITRI1.COM SYSDATE IT_PROG--> EMPLOYEES INSERT
+100 홍 HONG1@KITRI1.COM SYSDATE IT_PROG--> EMPLOYEES UPDATE
+222 홍 HONG2@KITRI1.COM SYSDATE IT_MAN--> JOBS INSERT
+JOBS : JOB_ID : JOB_TITLE : MIN_SALARY : MAX_SALARY
+
+   1-1. 직종 코드 존재 TRUE :ID 입력값  EMPLOYEES 테이블 존재 확인
+        1-1-1. 사번 존재 TRUE : --> update
+
+        1-1-2. 사번 x FALSE : --> insert
+
+   1-2. 직종코드 x FALSE : --> jobs table insert
+2. COMMIT;
+
+
+
+
+CREATE OR REPLACE PROCEDURE EMP_NEW_INSERT
+(ID EMPLOYEES.EMPLOYEE_ID%TYPE,
+NAME EMPLOYEES.LAST_NAME%TYPE,
+EMAIL EMPLOYEES.EMAIL%TYPE,
+INDATE EMPLOYEES.HIRE_DATE%TYPE,
+V_JOB_ID EMPLOYEES.JOB_ID%TYPE)
+
+IS
+ JOB_ID_CNT NUMBER;--1/0
+ EMP_ID_CNT NUMBER;--1/0
+BEGIN
+
+--DBMS_OUTPUT.PUT_LINE('직종입력'||JOB_ID);
+
+
+SELECT COUNT(*) 
+INTO JOB_ID_CNT
+FROM JOBS
+WHERE JOB_ID = V_JOB_ID;
+
+DBMS_OUTPUT.PUT_LINE('직종발견'||JOB_ID_CNT);
+
+IF(JOB_ID_CNT = 1) 
+    THEN 
+      SELECT COUNT(EMPLOYEE_ID)
+      INTO EMP_ID_CNT
+      FROM EMPLOYEES
+      WHERE EMPLOYEE_ID = ID;
+
+      DBMS_OUTPUT.PUT_LINE('사번발견'||EMP_ID_CNT);
+      
+      IF(EMP_ID_CNT = 1)
+      THEN
+       UPDATE EMPLOYEES
+       SET LAST_NAME = NAME , EMAIL = EMAIL , 
+       HIRE_DATE = INDATE, JOB_ID = V_JOB_ID
+       WHERE EMPLOYEE_ID = ID;    
+      ELSE 
+       INSERT INTO EMPLOYEES
+       (EMPLOYEE_ID, LAST_NAME, EMAIL, HIRE_DATE, JOB_ID)
+        VALUES(ID, NAME, EMAIL, INDATE, V_JOB_ID);
+      END IF;
+ 
+    ELSE 
+     INSERT INTO JOBS VALUES(V_JOB_ID, 'NEW_JOB', 0, 0); 
+END IF;
+ COMMIT;
+END;
+/
+SHOW ERRORS;
+
+
+EXEC EMP_NEW_INSERT(111,  '홍',  'HONG@KITRI1.COM', SYSDATE,  'IT_PROG');
+-- EMPLOYEES UPDATE
+
+EXEC EMP_NEW_INSERT(999,  '홍', 'HONG1@KITRI1.COM', SYSDATE, 'IT_PROG');
+-- EMPLOYEES INSERT
+
+EXEC EMP_NEW_iNSERT(222, '홍', 'HONG2@KITRI1.COM',  SYSDATE, 'IT_MAN');
+-- JOBS INSERT
+
+
+
+

@@ -1,0 +1,168 @@
+1. 사원의 이름과 상사의 사번을 조회하되 아래와 같이 컬럼명을 지정하고 
+상사가 없는 사원은 상사의 사번에 '사장' 이라고 출력하시오.
+
+사원의 이름   상사의 사번
+--------------------------
+
+select first_name "사원의 이름" , 
+nvl(to_char(manager_id),'사장') "상사의 사번"
+from employees;
+
+
+***2. 아래와 같은 조건으로 직급을 조회하시오.
+입사년도가 2007년~2008년인 사원은 사원
+입사년도가 2005년~2006년인 사원은 대리
+입사년도가 2003년~2004년인 사원은 과장
+나머지는 임원  
+
+
+select first_name 사원명, hire_date 입사년도,
+decode(to_char(hire_date,'yy'),	'07','사원',
+								'08','사원',
+								'05','대리',
+								'06','대리',
+								'03','과장',
+								'04','과장',
+								'임원') 직급
+from employees;					
+				
+
+  
+3. DEPARTMENTS 테이블에서 DEPARTMENT_ID, MANAGER_ID를 조회하되
+매니저 없는 부서는 MANAGER_ID를 'NONE'로 표현하여 조회
+
+select department_id 부서코드, nvl(to_char(manager_id),'none') 매니저코드
+from departments;
+ 
+4. EMPLOYEES 테이블에서 전체 사원의 FIRST_NAME, JOB_ID, 총근무주수를 
+조회. 단, 근무주수 많은 직원부터 조회하고 
+같은 근무주수가 있으면 FIRST_NAME 오름차순으로 조회
+
+select first_name 사원명, job_id, trunc((sysdate-hire_date)/7) 총근무주수
+from employees
+order by (sysdate-hire_date)/7 desc , first_name;
+
+***5.employees 테이블에서 사번이 홀수인 사원의 
+사번, 급여, 입사일자 조회
+급여 : $ 세자리마다 콤마
+입사일자 : '04-7-16 : 5:34:35'
+
+select employee_id 사번, 
+to_char(salary, '$999,999,999') 급여, 
+to_char(hire_date, 'yyyy-mm-dd : hh:mi:ss') 입사일자
+from employees
+where mod(employee_id,2)=1;
+
+
+6. departments 테이블에서 location_id는 해당 부서의 도시코드이다. 도시코드에 따른 도시를 
+출력하고자 한다. 도시 출력의 조건은 다음과 같다.
+
+location_id : 
+1700 : 서울
+2400 : 부산
+2500 : 광주
+2700 : 제주
+나머지 : 대전
+
+출력은 다음과 같다
+도시코드     도시명
+1700          서울
+......
+
+select location_id 도시코드 ,
+case location_id when 1700 then '서울'
+				 when 2400 then '부산'
+				 when 2500 then '광주'
+				 when 2700 then '제주'
+				 else '대전' end 도시명
+from departments;
+
+
+
+
+
+7. 각 부서별 최대급여와 최소급여를 조회하시오.
+   단, 최대급여와 최소급여가 같은 부서는 직원이 한명일 가능성이 높기때문에 조회결과에서 제외시킨다.
+   
+   select department_id 부서코드, max(salary) 최대급여, min(salary) 최소급여
+   from employees
+   group by department_id
+   having max(salary) <> min(salary);
+
+
+8. 각 부서별 인원수를 조회하되 인원수가 5명 이상인 부서만 출력되도록 하시오.
+
+select department_id 부서코드, count(*) 총계
+from employees
+group by department_id
+having count(*)>=5;
+
+
+
+9. 부서가 50, 80, 110 번인 직원들 중에서 급여를 5000 이상 24000 이하를 받는
+   직원들을 대상으로 부서별 평균 급여를 조회하시오.
+   다, 평균급여가 8000 이상인 부서만 출력되어야 하며, 출력결과를 평균급여가 높은
+   부서 먼저 출력되도록 해야 한다.
+   
+   select d.department_id 부서코드, trunc(avg(salary)) 평균급여
+   from departments d, employees e
+   where d.department_id = e.department_id
+   and d.department_id in (50, 80, 110)
+   and salary between 5000 and 24000
+   group by d.department_id
+   having avg(salary) >= 8000
+   order by avg(salary) desc;
+   
+
+
+10. 80번 부서에서 가장 최근에 입사한 사원의 입사일과 입사한지 가장 오래된 사원의 입사일을 출력하도록 조회하시오.
+
+select min(hire_date) 오랜입사, max(hire_date) 최근입사
+from employees 
+where department_id = 80;
+
+11. 부서명 'shipping' 부서를 제외한 부서에 소속된 사원 중 커미션을 받는 사원의 수를 조회하시오.
+
+select d.department_name 부서명, count(commission_pct) 총계
+from employees e, departments d
+where e.department_id = d.department_id
+group by d.department_name
+having lower(d.department_name) <> 'shipping';
+
+12.이름이 'LEX' 인 직원이 근무했던 직종코드를 조회하시오.
+
+select e.first_name 직원이름, h.job_id 직종코드
+from employees e , job_history h
+where e.employee_id = h.employee_id 
+and upper(first_name) = 'LEX';
+
+
+13.직원의 이름과 근무국가명을 조회하시오.
+
+select first_name 사원명, country_name 근무국가
+from employees e, departments d, locations l , countries c
+where e.department_id = d.department_id
+and d.location_id = l.location_id
+and l.country_id = c.country_id
+
+14. 직책(job_title)이 IT 관련 사원의 이름, 직책, 부서명을 조회하시오.
+(직책이 IT 관련인 사원은 JOB_ID에 'IT'를 포함한 사원으로 간주)
+
+select first_name 사원이름, job_title 직책, department_name 부서명
+from employees e , jobs j , departments d
+where e.department_id = d.department_id
+and e.job_id = j.job_id
+and lower(j.job_id) like '%it%';
+
+15. 직원들의 이름, 입사일, 부서명을 조회하시오.
+
+select first_name 사원명, hire_date 입사일, department_name 부서명
+from employees e, departments d
+where e.department_id = d.department_id;
+
+16. 각 부서 이름별로 부서원수를 조회하시오. 
+
+select department_name 부서명, count(*) 총계
+from departments d, employees e
+where d.department_id = e.department_id
+group by department_name;

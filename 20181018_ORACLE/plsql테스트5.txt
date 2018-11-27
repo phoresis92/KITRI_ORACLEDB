@@ -1,0 +1,19 @@
+create or replace procedure emp_cursor2
+is
+v_emp employees%rowtype;
+cursor emp_id_cursor is
+select * from employees;
+begin
+ open emp_id_cursor;
+loop
+   fetch emp_id_cursor into v_emp;
+ exit when emp_id_cursor%notfound;
+ dbms_output.put_line
+('사번:' || v_emp.employee_id
+|| ' 이름:' || v_emp.first_name
+|| ' 급여:' || v_emp.salary);
+end loop;
+ close emp_id_cursor;
+end;
+/
+show errors;

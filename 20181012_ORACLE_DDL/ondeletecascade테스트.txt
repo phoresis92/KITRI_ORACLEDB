@@ -1,0 +1,106 @@
+1. 테이블 삭제시 제약조건 무시
+drop table emp_const CASCADE CONSTRAINTS;
+drop table dept_const CASCADE CONSTRAINTS;
+
+
+
+CASCADE CONSTRAINTS 테이블 삭제시 제약조건을 동시에 제거
+
+
+2. emp_const 테이블 생성
+create table emp_const
+(emp_id number(10)
+constraint emp_const_id_pk primary key, 
+name varchar2(30)
+constraint emp_const_name_nn not null, 
+salary number(10, 2)
+constraint emp_const_salary_ck check (salary >= 20000), 
+hire_date date DEFAULT SYSDATE, 
+dept_id number(10),
+gender varchar2(6)
+constraint emp_const_gender_ck check 
+(gender IN ('F', 'M') )
+);
+
+3.dept_const 테이블 생성
+create table dept_const
+(dept_id number(5) constraint dept_const_id_pk primary key,
+dept_name varchar2(50) constraint dept_const_name_nn not null,
+dept_manager_id number(10) 
+constraint 
+dept_const_manager_fk references emp_const(emp_id)
+);
+
+4. 이전 참조키 삭제
+alter table emp_const drop constraint emp_const_dept_id_fk;
+
+5. 참조키 설정 + on delete cascade 옵션추가
+alter table emp_const add constraint emp_const_dept_id_fk
+foreign key(dept_id) references dept_const(dept_id)
+on delete cascade;
+
+6. 이전 참조키 삭제
+alter table dept_const drop constraint dept_const_manager_fk;
+
+7. 참조키 설정 + on delete cascade 옵션추가
+alter table dept_const
+add constraint dept_const_manager_fk
+foreign key(dept_manager_id) 
+references emp_const(emp_id) 
+on delete cascade;
+
+-- 문제가 되었던 부분 on delete cascade 옵션을 양쪽에 다 물려놔야
+	부모 데이터 삭제시 delete 된다.
+
+insert into dept_const(dept_id, dept_name)
+values(10, '인사부');
+insert into dept_const(dept_id, dept_name, dept_manager_id)
+values(20, '총무부', NULL);
+insert into dept_const
+values(30, '전산부', NULL);
+insert into dept_const
+values(40, '교육부', NULL);
+insert into dept_const
+values(50, '영업부', NULL);
+
+INSERT INTO EMP_CONST VALUES(100, '이사장', 50000, '99/10/11', 50, 'F');
+INSERT INTO EMP_CONST VALUES(200, '박부장', 40000, '05/10/11', 10, 'M');
+INSERT INTO EMP_CONST VALUES(300, '김과장', 30000, '07/12/11', 10, 'M');
+INSERT INTO EMP_CONST VALUES(400, '최사원', 20000, SYSDATE, 10, 'F');
+INSERT INTO EMP_CONST VALUES(500, '박신입', 20000, DEFAULT, 30, 'M');
+INSERT INTO EMP_CONST(EMP_ID, NAME, SALARY, GENDER) 
+VALUES(600, '이신입', 20000, 'M');
+COMMIT;
+
+
+INSERT INTO DEPT_CONST 
+SELECT DEPARTMENT_ID, DEPARTMENT_NAME, MANAGER_ID
+FROM DEPARTMENTS
+WHERE DEPARTMENT_ID=90;
+
+=======emp_const, dept_const : 6개 레코드 존재
+
+update dept_const
+set dept_manager_id = 100
+where dept_manager_id is null;
+
+=======dept_const : 부서장 없는 부서를 부서장 100번 사번 수정
+
+commit;
+
+select * from emp_const;
+select * from dept_const;
+
+
+delete emp_const where emp_id=100;
+
+select * from emp_const;
+select * from dept_const;
+
+
+emp_const : 사번 100번 사원 삭제
+ emp_const 테이블에서 부서장 100번 부서에 속한 부서원 삭제
+ 
+ 
+dept_const:  dept_manager_id 100 부서 삭제
+	(6개 부서 모두 부서장 100번 상태 따라서 모두 삭제)
